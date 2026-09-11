@@ -8,7 +8,7 @@ import KpiCard from '@/components/admin/KpiCard';
 import PaymentBreakdown from '@/components/admin/PaymentBreakdown';
 import DailyBillTable from '@/components/admin/DailyBillTable';
 import { 
-  DollarSign, 
+  IndianRupee, 
   Receipt, 
   TrendingUp, 
   Clock, 
@@ -133,7 +133,7 @@ export default function AdminDashboardPage() {
           title="Total Revenue"
           value={formatCurrency(totalRevenue, sym)}
           subtitle={`From ${paidBills.length} paid invoices`}
-          icon={DollarSign}
+          icon={IndianRupee}
           color="emerald"
         />
         <KpiCard

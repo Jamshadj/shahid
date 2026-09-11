@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react';
 import { getStoreSettings, updateStoreSettings } from '@/lib/data-service';
 import { StoreSettings, ThermalPrinterWidth } from '@/types/database';
-import { Save, Building2, Phone, MapPin, Percent, DollarSign, Printer } from 'lucide-react';
+import { Save, Building2, Phone, MapPin, Percent, IndianRupee, Printer } from 'lucide-react';
 import { toast } from 'react-toastify';
 
 export default function AdminSettingsPage() {
@@ -110,7 +110,7 @@ export default function AdminSettingsPage() {
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1 flex items-center gap-1.5">
-              <DollarSign className="w-3.5 h-3.5 text-indigo-600" /> Currency Symbol
+              <IndianRupee className="w-3.5 h-3.5 text-indigo-600" /> Currency Symbol
             </label>
             <input
               type="text"
