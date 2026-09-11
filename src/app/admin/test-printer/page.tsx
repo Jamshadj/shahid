@@ -71,14 +71,44 @@ export default function TestPrinterPage() {
             )}
           </div>
 
+          {/* Global CSS for Perfect Thermal Printing */}
+          <style jsx global>{`
+            @media print {
+              @page {
+                size: 80mm auto;
+                margin: 0;
+              }
+              body {
+                background-color: #ffffff !important;
+                color: #000000 !important;
+                margin: 0 !important;
+                padding: 0 !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+              }
+              .print-hidden, .print\\:hidden {
+                display: none !important;
+              }
+              #printable-receipt {
+                width: 74mm !important;
+                max-width: 74mm !important;
+                box-shadow: none !important;
+                border: none !important;
+                margin: 0 auto !important;
+                padding: 2mm 0 !important;
+              }
+            }
+          `}</style>
+
           {/* Rendered 80mm Thermal Slip */}
           <div
             id="printable-receipt"
-            className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-xl border border-slate-300 rounded-sm w-[80mm] max-w-[80mm] my-4"
+            className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-xl border border-slate-300 rounded-sm w-[76mm] max-w-[76mm] my-4"
+            style={{ color: '#000000', backgroundColor: '#ffffff' }}
           >
             {/* Header */}
             <div className="text-center space-y-0.5 pb-2 border-b-2 border-black">
-              <h2 className="font-extrabold text-sm uppercase tracking-wider">
+              <h2 className="font-extrabold text-sm uppercase tracking-wider leading-tight">
                 GALAXY RESTAURANT KARUNA MEDICAL COLLEGE
               </h2>
               <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
@@ -86,65 +116,68 @@ export default function TestPrinterPage() {
               <p className="text-[10px] font-bold">Ph: +91 75580 60207</p>
             </div>
 
-            {/* Meta */}
-            <div className="py-2 space-y-0.5 border-b border-black text-[10px]">
-              <div className="text-center font-black uppercase tracking-wider py-0.5 border-y border-black text-xs my-1">
-                RESTAURANT CASH BILL
-              </div>
-              <div className="flex justify-between font-black text-xs">
-                <span>TOKEN NUMBER: #124</span>
-                <span>MODE: CASH</span>
-              </div>
-              <div className="flex justify-between font-bold">
-                <span>Bill: BILL-1024</span>
-                <span>Date: {new Date().toLocaleDateString('en-IN')}</span>
-              </div>
+            {/* Cash Bill Title Bar */}
+            <div className="text-center font-black uppercase tracking-wider py-1 border-b-2 border-black text-xs my-1 bg-black text-white">
+              RESTAURANT CASH BILL
             </div>
 
+            {/* Meta Table */}
+            <table className="w-full text-left my-1 text-[10px] border-b border-black pb-1 font-bold">
+              <tbody>
+                <tr>
+                  <td className="py-0.5">TOKEN NO: #124</td>
+                  <td className="py-0.5 text-right uppercase">MODE: CASH</td>
+                </tr>
+                <tr>
+                  <td className="py-0.5">Bill: BILL-1024</td>
+                  <td className="py-0.5 text-right">{new Date().toLocaleDateString('en-IN')}</td>
+                </tr>
+              </tbody>
+            </table>
+
             {/* Table */}
-            <table className="w-full text-left my-2 text-[10px] border-b border-black pb-2">
+            <table className="w-full text-left my-2 text-[10px] border-b-2 border-black pb-2">
               <thead>
                 <tr className="border-b border-black font-extrabold">
-                  <th className="py-1">QTY ITEM</th>
-                  <th className="py-1 text-right">RATE</th>
-                  <th className="py-1 text-right">AMT</th>
+                  <th className="py-1 w-[50%]">QTY ITEM</th>
+                  <th className="py-1 w-[25%] text-right pr-1">RATE</th>
+                  <th className="py-1 w-[25%] text-right">AMT</th>
                 </tr>
               </thead>
               <tbody>
-                <tr>
-                  <td className="py-1 font-bold">2 x Normal Al-Faham (Quarter)</td>
-                  <td className="py-1 text-right">140.00</td>
-                  <td className="py-1 text-right font-bold">280.00</td>
+                <tr className="align-top">
+                  <td className="py-1 pr-1 font-bold w-[50%]">2 x Normal Al-Faham (Quarter)</td>
+                  <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">140.00</td>
+                  <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">280.00</td>
                 </tr>
-                <tr>
-                  <td className="py-1 font-bold">1 x Normal Mandhi (Quarter)</td>
-                  <td className="py-1 text-right">200.00</td>
-                  <td className="py-1 text-right font-bold">200.00</td>
+                <tr className="align-top">
+                  <td className="py-1 pr-1 font-bold w-[50%]">1 x Normal Mandhi (Quarter)</td>
+                  <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">200.00</td>
+                  <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">200.00</td>
                 </tr>
-                <tr>
-                  <td className="py-1 font-bold">2 x Fresh Lime Soda</td>
-                  <td className="py-1 text-right">30.00</td>
-                  <td className="py-1 text-right font-bold">60.00</td>
+                <tr className="align-top">
+                  <td className="py-1 pr-1 font-bold w-[50%]">2 x Fresh Lime Soda</td>
+                  <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">30.00</td>
+                  <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">60.00</td>
                 </tr>
               </tbody>
             </table>
 
             {/* Calculation */}
-            <div className="space-y-1 text-[10px] border-b border-black pb-2">
+            <div className="space-y-1 text-[10px] border-b-2 border-black pb-2">
               <div className="flex justify-between">
-                <span>SUBTOTAL:</span>
-                <span>₹540.00</span>
+                <span className="font-bold">SUBTOTAL:</span>
+                <span className="font-bold">Rs. 540.00</span>
               </div>
-              <div className="flex justify-between text-sm font-black pt-1.5 border-t-2 border-black">
+              <div className="flex justify-between text-sm font-black pt-1 border-t border-black">
                 <span>GRAND TOTAL:</span>
-                <span>₹540.00</span>
+                <span>Rs. 540.00</span>
               </div>
             </div>
 
             {/* Footer */}
             <div className="text-center pt-3 text-[10px] space-y-1">
               <p className="font-bold uppercase tracking-wider">*** THANK YOU! VISIT AGAIN ***</p>
-              <p className="text-[8px] text-gray-600">TENAX TN260 80mm POS Thermal Receipt</p>
             </div>
           </div>
         </div>

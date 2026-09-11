@@ -3,7 +3,7 @@
 import { use, useEffect, useState } from 'react';
 import { getBillById, getStoreSettings } from '@/lib/data-service';
 import { BillWithItems, StoreSettings } from '@/types/database';
-import { formatCurrency, formatDate } from '@/lib/utils';
+import { formatDate } from '@/lib/utils';
 import { Printer, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
@@ -45,14 +45,45 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const sym = settings?.currency_symbol || '₹';
-  const taxRate = settings?.tax_rate_percent || 0;
-  const halfTax = (taxRate / 2).toFixed(1);
-  const cgstAmount = (bill.tax_amount / 2).toFixed(2);
-  const sgstAmount = (bill.tax_amount / 2).toFixed(2);
+  // Use 'Rs. ' for physical thermal printing so thermal ESC/POS drivers never print '?' instead of '₹'
+  const printSym = 'Rs. ';
+
+  const formatPrintMoney = (val: number) => {
+    return `${printSym}${val.toFixed(2)}`;
+  };
 
   return (
-    <div className="min-h-screen bg-slate-100 p-4 md:p-8 flex flex-col items-center justify-center font-sans">
+    <div className="min-h-screen bg-slate-100 p-2 md:p-8 flex flex-col items-center justify-center font-sans">
+      
+      {/* Global CSS for Perfect Thermal Printing */}
+      <style jsx global>{`
+        @media print {
+          @page {
+            size: 80mm auto;
+            margin: 0;
+          }
+          body {
+            background-color: #ffffff !important;
+            color: #000000 !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+          }
+          .print-hidden, .print\\:hidden {
+            display: none !important;
+          }
+          #printable-receipt {
+            width: 74mm !important;
+            max-width: 74mm !important;
+            box-shadow: none !important;
+            border: none !important;
+            margin: 0 auto !important;
+            padding: 2mm 0 !important;
+          }
+        }
+      `}</style>
+
       {/* On-screen Action Bar (Hidden during printing) */}
       <div className="w-full max-w-sm mb-6 flex items-center justify-between print:hidden">
         <Link
@@ -66,19 +97,19 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
           onClick={() => window.print()}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 transition"
         >
-          <Printer className="w-4 h-4" /> Print on TENAX TN260 (80mm)
+          <Printer className="w-4 h-4" /> Print Receipt
         </button>
       </div>
 
-      {/* Printable Receipt Container (TENAX TN260 80mm Paper Format) */}
+      {/* Printable Thermal Receipt (TENAX TN260 80mm Paper Format) */}
       <div
         id="printable-receipt"
-        className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-2xl rounded-sm w-[80mm] max-w-[80mm]"
+        className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-2xl rounded-sm w-[76mm] max-w-[76mm]"
         style={{ color: '#000000', backgroundColor: '#ffffff' }}
       >
         {/* Header */}
         <div className="text-center space-y-0.5 pb-2 border-b-2 border-black">
-          <h2 className="font-extrabold text-sm uppercase tracking-wider">
+          <h2 className="font-extrabold text-sm uppercase tracking-wider leading-tight">
             {settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE'}
           </h2>
           <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
@@ -86,82 +117,80 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
           {settings?.phone_number && <p className="text-[10px] font-bold">Ph: {settings.phone_number}</p>}
         </div>
 
-        {/* Invoice Header Details */}
-        <div className="py-2 space-y-0.5 border-b border-black text-[10px]">
-          <div className="text-center font-black uppercase tracking-wider py-0.5 border-y border-black text-xs my-1">
-            RESTAURANT CASH BILL
-          </div>
-          <div className="flex justify-between font-black text-xs">
-            <span>TOKEN NUMBER: #{bill.bill_number % 100 || bill.bill_number}</span>
-            <span>MODE: {bill.payment_mode.toUpperCase()}</span>
-          </div>
-          <div className="flex justify-between font-bold">
-            <span>Bill: BILL-{bill.bill_number}</span>
-            <span>Date: {formatDate(bill.created_at)}</span>
-          </div>
-          {bill.customer_name && bill.customer_name !== 'Walk-in Customer' && <div>CUST: {bill.customer_name}</div>}
-          {bill.customer_phone && <div>MOB: {bill.customer_phone}</div>}
+        {/* Cash Bill Title Bar */}
+        <div className="text-center font-black uppercase tracking-wider py-1 border-b-2 border-black text-xs my-1 bg-black text-white">
+          RESTAURANT CASH BILL
         </div>
 
-        {/* Items Table */}
-        <table className="w-full text-left my-2 text-[10px] border-b border-black pb-2">
+        {/* Invoice Header Table */}
+        <table className="w-full text-left my-1 text-[10px] border-b border-black pb-1 font-bold">
+          <tbody>
+            <tr>
+              <td className="py-0.5">TOKEN NO: #{bill.bill_number % 100 || bill.bill_number}</td>
+              <td className="py-0.5 text-right uppercase">MODE: {bill.payment_mode}</td>
+            </tr>
+            <tr>
+              <td className="py-0.5">Bill: BILL-{bill.bill_number}</td>
+              <td className="py-0.5 text-right">{formatDate(bill.created_at)}</td>
+            </tr>
+            {bill.customer_name && bill.customer_name !== 'Walk-in Customer' && (
+              <tr>
+                <td colSpan={2} className="py-0.5">CUST: {bill.customer_name}</td>
+              </tr>
+            )}
+            {bill.customer_phone && (
+              <tr>
+                <td colSpan={2} className="py-0.5">MOB: {bill.customer_phone}</td>
+              </tr>
+            )}
+          </tbody>
+        </table>
+
+        {/* Items Table with Explicit Column Widths */}
+        <table className="w-full text-left my-2 text-[10px] border-b-2 border-black pb-2">
           <thead>
             <tr className="border-b border-black font-extrabold">
-              <th className="py-1">QTY ITEM</th>
-              <th className="py-1 text-right">RATE</th>
-              <th className="py-1 text-right">AMT</th>
+              <th className="py-1 w-[50%]">QTY ITEM</th>
+              <th className="py-1 w-[25%] text-right pr-1">RATE</th>
+              <th className="py-1 w-[25%] text-right">AMT</th>
             </tr>
           </thead>
           <tbody>
             {bill.bill_items?.map((item) => (
               <tr key={item.id} className="align-top">
-                <td className="py-1 pr-1 font-bold">
+                <td className="py-1 pr-1 font-bold w-[50%]">
                   {item.quantity} x {item.item_name}
                 </td>
-                <td className="py-1 text-right whitespace-nowrap">{item.unit_price}</td>
-                <td className="py-1 text-right font-bold whitespace-nowrap">{item.total_price}</td>
+                <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">{item.unit_price.toFixed(2)}</td>
+                <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">{item.total_price.toFixed(2)}</td>
               </tr>
             ))}
           </tbody>
         </table>
 
         {/* Calculation Summary */}
-        <div className="space-y-1 text-[10px] border-b border-black pb-2">
+        <div className="space-y-1 text-[10px] border-b-2 border-black pb-2">
           <div className="flex justify-between">
-            <span>SUBTOTAL:</span>
-            <span>{formatCurrency(bill.subtotal, sym)}</span>
+            <span className="font-bold">SUBTOTAL:</span>
+            <span className="font-bold">{formatPrintMoney(bill.subtotal)}</span>
           </div>
 
           {bill.discount_amount > 0 && (
             <div className="flex justify-between font-bold">
               <span>DISCOUNT:</span>
-              <span>-{formatCurrency(bill.discount_amount, sym)}</span>
+              <span>-{formatPrintMoney(bill.discount_amount)}</span>
             </div>
           )}
 
-          {bill.tax_amount > 0 && (
-            <>
-              <div className="flex justify-between text-gray-700">
-                <span>CGST ({halfTax}%):</span>
-                <span>+{sym}{cgstAmount}</span>
-              </div>
-              <div className="flex justify-between text-gray-700">
-                <span>SGST ({halfTax}%):</span>
-                <span>+{sym}{sgstAmount}</span>
-              </div>
-            </>
-          )}
-
-          <div className="flex justify-between text-sm font-black pt-1.5 border-t-2 border-black">
+          <div className="flex justify-between text-sm font-black pt-1 border-t border-black">
             <span>GRAND TOTAL:</span>
-            <span>{formatCurrency(bill.grand_total, sym)}</span>
+            <span>{formatPrintMoney(bill.grand_total)}</span>
           </div>
         </div>
 
         {/* Footer */}
         <div className="text-center pt-3 text-[10px] space-y-1">
           <p className="font-bold uppercase tracking-wider">*** THANK YOU! VISIT AGAIN ***</p>
-          <p className="text-[8px] text-gray-600">TENAX TN260 80mm POS Thermal Receipt</p>
         </div>
       </div>
     </div>
