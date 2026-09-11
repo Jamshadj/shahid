@@ -1,363 +1,361 @@
 'use client';
 
-import { useEffect, useState } from 'react';
-import { getCategories, getMenuItems, getStoreSettings, createBill } from '@/lib/data-service';
-import { Category, MenuItem, StoreSettings, CartItem, PaymentMode } from '@/types/database';
-import { formatCurrency } from '@/lib/utils';
-import { 
-  Search, 
-  Plus, 
-  Minus, 
-  ShoppingBag, 
-  CheckCircle2, 
-  ArrowLeft, 
-  Receipt, 
-  X,
-  Lock
-} from 'lucide-react';
-import Link from 'next/link';
-import { toast } from 'react-toastify';
+import { useState } from 'react';
+import { Phone } from 'lucide-react';
 
 export default function PublicMenuPage() {
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [items, setItems] = useState<MenuItem[]>([]);
-  const [settings, setSettings] = useState<StoreSettings | null>(null);
-  const [selectedCategory, setSelectedCategory] = useState<string>('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [cart, setCart] = useState<CartItem[]>([]);
-  const [isCheckoutOpen, setIsCheckoutOpen] = useState(false);
-
-  const [customerName, setCustomerName] = useState('');
-  const [customerPhone, setCustomerPhone] = useState('');
-  const [paymentMode, setPaymentMode] = useState<PaymentMode>('upi');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [completedBillId, setCompletedBillId] = useState<string | null>(null);
-
-  useEffect(() => {
-    Promise.all([getCategories(), getMenuItems(), getStoreSettings()]).then(([cats, its, sets]) => {
-      setCategories(cats);
-      setItems(its);
-      setSettings(sets);
-    });
-  }, []);
-
-  const addToCart = (item: MenuItem) => {
-    setCart((prev) => {
-      const existing = prev.find((ci) => ci.menuItem.id === item.id);
-      if (existing) {
-        return prev.map((ci) =>
-          ci.menuItem.id === item.id ? { ...ci, quantity: ci.quantity + 1 } : ci
-        );
-      }
-      return [...prev, { menuItem: item, quantity: 1 }];
-    });
-  };
-
-  const removeFromCart = (itemId: string) => {
-    setCart((prev) => {
-      const existing = prev.find((ci) => ci.menuItem.id === itemId);
-      if (existing && existing.quantity > 1) {
-        return prev.map((ci) =>
-          ci.menuItem.id === itemId ? { ...ci, quantity: ci.quantity - 1 } : ci
-        );
-      }
-      return prev.filter((ci) => ci.menuItem.id !== itemId);
-    });
-  };
-
-  const handleGenerateBill = async () => {
-    if (cart.length === 0) return;
-    setIsSubmitting(true);
-    try {
-      const bill = await createBill({
-        customer_name: customerName,
-        customer_phone: customerPhone,
-        cartItems: cart,
-        discount_amount: 0,
-        tax_rate_percent: settings?.tax_rate_percent || 0,
-        payment_mode: paymentMode,
-        payment_status: 'paid',
-      });
-
-      toast.success(`Bill #${bill.bill_number} generated successfully!`);
-      setCompletedBillId(bill.id);
-      setCart([]);
-      setIsCheckoutOpen(false);
-    } catch {
-      toast.error('Failed to generate bill');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const filteredItems = items.filter((item) => {
-    const matchesSearch = item.name.toLowerCase().includes(searchQuery.toLowerCase()) || (item.description && item.description.toLowerCase().includes(searchQuery.toLowerCase()));
-    const matchesCategory = selectedCategory === 'all' || item.category_id === selectedCategory;
-    return matchesSearch && matchesCategory;
-  });
-
-  const cartSubtotal = cart.reduce((sum, ci) => sum + ci.menuItem.price * ci.quantity, 0);
-  const totalCartCount = cart.reduce((sum, ci) => sum + ci.quantity, 0);
-  const sym = settings?.currency_symbol || '₹';
+  const [activeTab, setActiveTab] = useState<'food' | 'beverages'>('food');
 
   return (
-    <div className="min-h-screen bg-slate-50 text-slate-900 pb-24">
-      {/* Header Banner */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-30 shadow-sm">
-        <div className="max-w-3xl mx-auto px-4 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <Link href="/" className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 transition">
-              <ArrowLeft className="w-4 h-4" />
-            </Link>
-            <div>
-              <h1 className="text-lg font-black text-slate-900">{settings?.restaurant_name || 'Restaurant Digital Menu'}</h1>
-              <p className="text-xs text-indigo-600 font-bold">Public Mobile Digital Menu</p>
-            </div>
-          </div>
-
-          <Link
-            href="/login"
-            className="flex items-center gap-1 text-xs font-bold text-slate-700 hover:text-indigo-600 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 transition"
-          >
-            <Lock className="w-3 h-3 text-indigo-600" /> Staff Login
-          </Link>
-        </div>
-
-        {/* Category Tabs Scroll */}
-        <div className="max-w-3xl mx-auto px-4 pb-3 flex items-center gap-2 overflow-x-auto no-scrollbar">
+    <div className="min-h-screen bg-[#14100e] text-white flex flex-col items-center p-2 sm:p-6 md:p-10 font-sans selection:bg-[#d49e38] selection:text-black">
+      {/* Main Container */}
+      <div className="w-full max-w-5xl space-y-6">
+        
+        {/* Page Switcher Tabs */}
+        <div className="flex items-center justify-center gap-2 sm:gap-4 pt-2">
           <button
-            onClick={() => setSelectedCategory('all')}
-            className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${
-              selectedCategory === 'all'
-                ? 'bg-indigo-600 text-white shadow-sm'
-                : 'bg-slate-100 text-slate-600 hover:text-slate-900'
+            onClick={() => setActiveTab('food')}
+            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 border ${
+              activeTab === 'food'
+                ? 'bg-[#d49e38] text-black border-[#d49e38] shadow-lg shadow-[#d49e38]/20 scale-105'
+                : 'bg-[#261f1c] text-stone-300 border-[#423631] hover:text-white'
             }`}
           >
-            All Items ({items.length})
+            📋 Food & Barbeque (Page 1)
           </button>
-          {categories.map((cat) => {
-            const count = items.filter((i) => i.category_id === cat.id).length;
-            return (
-              <button
-                key={cat.id}
-                onClick={() => setSelectedCategory(cat.id)}
-                className={`px-4 py-1.5 rounded-full text-xs font-bold whitespace-nowrap transition ${
-                  selectedCategory === cat.id
-                    ? 'bg-indigo-600 text-white shadow-sm'
-                    : 'bg-slate-100 text-slate-600 hover:text-slate-900'
-                }`}
-              >
-                {cat.name} ({count})
-              </button>
-            );
-          })}
-        </div>
-      </header>
-
-      {/* Main Body */}
-      <main className="max-w-3xl mx-auto px-4 py-6 space-y-4">
-        {/* Search */}
-        <div className="relative">
-          <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
-          <input
-            type="text"
-            placeholder="Search food, beverages, desserts..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="w-full bg-white border border-slate-200 rounded-xl pl-10 pr-4 py-2.5 text-sm text-slate-900 focus:outline-none focus:border-indigo-600 shadow-sm"
-          />
+          <button
+            onClick={() => setActiveTab('beverages')}
+            className={`px-5 py-2.5 rounded-xl text-xs sm:text-sm font-black uppercase tracking-wider transition-all duration-200 border ${
+              activeTab === 'beverages'
+                ? 'bg-[#d49e38] text-black border-[#d49e38] shadow-lg shadow-[#d49e38]/20 scale-105'
+                : 'bg-[#261f1c] text-stone-300 border-[#423631] hover:text-white'
+            }`}
+          >
+            🍹 Juices & Desserts (Page 2)
+          </button>
         </div>
 
-        {/* Success Banner if bill generated */}
-        {completedBillId && (
-          <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <CheckCircle2 className="w-6 h-6 text-emerald-600 shrink-0" />
-              <div>
-                <p className="font-bold text-slate-900 text-sm">Bill Generated Successfully!</p>
-                <p className="text-xs text-emerald-700">Your order has been recorded into POS.</p>
+        {/* ------------------------------------------------------------- */}
+        {/* PAGE 1: FOOD & BARBEQUE MENU (Matching Physical Photo 2)       */}
+        {/* ------------------------------------------------------------- */}
+        {activeTab === 'food' && (
+          <div className="bg-[#28201c] border-[3px] border-[#d49e38]/70 rounded-3xl p-4 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            {/* Corner Gold Accents */}
+            <div className="absolute top-0 left-0 w-14 h-14 border-t-[3px] border-l-[3px] border-[#d49e38] rounded-tl-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-14 h-14 border-t-[3px] border-r-[3px] border-[#d49e38] rounded-tr-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-14 h-14 border-b-[3px] border-l-[3px] border-[#d49e38] rounded-bl-2xl pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-14 h-14 border-b-[3px] border-r-[3px] border-[#d49e38] rounded-br-2xl pointer-events-none" />
+
+            {/* Restaurant Header */}
+            <div className="text-center space-y-1 pt-2 pb-4 border-b border-[#d49e38]/30">
+              <h1 className="text-4xl sm:text-6xl font-serif font-bold text-[#e6b34d] tracking-tight">Galaxy</h1>
+              <p className="text-base sm:text-xl font-serif text-stone-200 uppercase tracking-widest font-medium">
+                Bamboo hut Restaurant
+              </p>
+              <p className="text-xs sm:text-sm text-[#c89836] font-semibold tracking-wider">
+                Ayyappankavu, Vandithavalam
+              </p>
+            </div>
+
+            {/* 2-Column Physical Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-stone-100 text-xs">
+              
+              {/* LEFT COLUMN: Poratta, Non Veg Curry, Veg Curry */}
+              <div className="space-y-6">
+                {/* PORATTA */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow flex justify-between items-center">
+                    <span>PORATTA</span>
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PORATTA</span><span>₹15</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHAPPATHI</span><span>₹15</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>WHEAT PORATTA</span><span>₹18</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>NOOL PORATTA</span><span>₹22</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>EGG ROAST SINGLE</span><span>₹30</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>EGG ROAST FULL</span><span>₹50</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHICKEN CURRY</span><span>₹100</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BEEF CURRY</span><span>₹100</span></div>
+                  </div>
+                </div>
+
+                {/* NON VEG. CURRY */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    NON VEG. CURRY
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHICKEN MANJOORIAN</span><span>₹140</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHILLY CHICKEN GRAVY</span><span>₹140</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PEPPER CHICKEN</span><span>₹150</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GARLIC CHICKEN</span><span>₹170</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHICKEN KONDATTAM</span><span>₹170</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BUTTER CHICKEN</span><span>₹180</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>KADAI CHICKEN</span><span>₹180</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GINGER CHICKEN</span><span>₹170</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHICKEN CHILLY(65) Q</span><span>₹140</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHICKEN CHILLY(65) 1/2</span><span>₹220</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHICKEN CHILLY(65) full</span><span>₹400</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BEEF CHILLY DRY FRY</span><span>₹150</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BEEF CHILLY GRAVY</span><span>₹170</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BEEF ROAST</span><span>₹130</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BEEF KONDATAM</span><span>₹190</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BEEF FRY</span><span>₹110</span></div>
+                  </div>
+                </div>
+
+                {/* VEG. CURRY */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    VEG. CURRY
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GOBI MANJURIAN</span><span>₹100</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MUSHROOM MANJURIAN</span><span>₹120</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHILLY GOBI GRAVY</span><span>₹100</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MUSHROOM MASALA</span><span>₹130</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHILLY GOPI DRY</span><span>₹120</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PANEER MANJURIAN</span><span>₹140</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PANEER BUTTER</span><span>₹160</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GREEN PEICE</span><span>₹80</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHANNA MASALA</span><span>₹70</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>EGG ROAST</span><span>₹30, ₹50</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: Al-Faham, Mandhi, Biriyani, Meals, Chinese */}
+              <div className="space-y-6">
+                {/* AL-FAHAM */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm flex justify-between items-center shadow">
+                    <span>AL-FAHAM</span>
+                    <span className="font-mono text-[11px] font-extrabold tracking-widest">Q &nbsp;&nbsp;&nbsp; H &nbsp;&nbsp;&nbsp; F</span>
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>NORMAL</span><span className="font-mono text-[#e6b34d]">₹140 &nbsp; ₹260 &nbsp; ₹480</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PERI PERI</span><span className="font-mono text-[#e6b34d]">₹150 &nbsp; ₹270 &nbsp; ₹480</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BBQ</span><span className="font-mono text-[#e6b34d]">₹180 &nbsp; ₹340 &nbsp; ₹640</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PEPPER</span><span className="font-mono text-[#e6b34d]">₹150 &nbsp; ₹270 &nbsp; ₹640</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>TURKISH</span><span className="font-mono text-[#e6b34d]">₹180 &nbsp; ₹340 &nbsp; ₹640</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>HONEY</span><span className="font-mono text-[#e6b34d]">₹180 &nbsp; ₹340 &nbsp; ₹640</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>HONEY CHILLY</span><span className="font-mono text-[#e6b34d]">₹240 &nbsp; ₹440 &nbsp; ₹830</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>KANDHARI</span><span className="font-mono text-[#e6b34d]">₹180 &nbsp; ₹340 &nbsp; ₹640</span></div>
+                  </div>
+                </div>
+
+                {/* AL-FAHAM MANDHI */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm flex justify-between items-center shadow">
+                    <span>AL-FAHAM MANDHI</span>
+                    <span className="font-mono text-[11px] font-extrabold tracking-widest">Q &nbsp;&nbsp;&nbsp; H &nbsp;&nbsp;&nbsp; F</span>
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>NORMAL</span><span className="font-mono text-[#e6b34d]">₹200 &nbsp; ₹400 &nbsp; ₹740</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PERI PERI</span><span className="font-mono text-[#e6b34d]">₹220 &nbsp; ₹420 &nbsp; ₹760</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BBQ</span><span className="font-mono text-[#e6b34d]">₹240 &nbsp; ₹440 &nbsp; ₹830</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PEPPER</span><span className="font-mono text-[#e6b34d]">₹220 &nbsp; ₹420 &nbsp; ₹760</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>TURKISH</span><span className="font-mono text-[#e6b34d]">₹240 &nbsp; ₹440 &nbsp; ₹830</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>HONEY</span><span className="font-mono text-[#e6b34d]">₹240 &nbsp; ₹440 &nbsp; ₹830</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>HONEY CHILLY</span><span className="font-mono text-[#e6b34d]">₹240 &nbsp; ₹440 &nbsp; ₹830</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>KANDHARI</span><span className="font-mono text-[#e6b34d]">₹240 &nbsp; ₹440 &nbsp; ₹830</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MANDHI RICE Q</span><span className="font-mono text-[#e6b34d]">₹100</span></div>
+                  </div>
+                </div>
+
+                {/* BIRIYANI */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm flex justify-between items-center shadow">
+                    <span>BIRIYANI</span>
+                    <span className="font-mono text-[11px] font-extrabold tracking-wider">CHICKEN &nbsp;&nbsp; BEEF</span>
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>RAWTHER</span><span className="font-mono text-[#e6b34d]">₹150 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 150</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>THALASERRY</span><span className="font-mono text-[#e6b34d]">₹160 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; 160</span></div>
+                  </div>
+                </div>
+
+                {/* MEALS */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    MEALS
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHATTI CHOOR</span><span>₹200</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MEALS</span><span>₹60</span></div>
+                  </div>
+                </div>
+
+                {/* CHINEES */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm flex justify-between items-center shadow">
+                    <span>CHINEES</span>
+                    <span className="font-mono text-[11px] font-extrabold tracking-wider">Veg &nbsp;&nbsp; Egg &nbsp;&nbsp; Chicken</span>
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>FRIED RICE</span><span className="font-mono text-[#e6b34d]">₹120 &nbsp; ₹130 &nbsp; ₹160</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>NOODLES</span><span className="font-mono text-[#e6b34d]">₹120 &nbsp; ₹130 &nbsp; ₹160</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>SCHEZWAN FRIED RICE</span><span className="font-mono text-[#e6b34d]">₹130 &nbsp; ₹150 &nbsp; ₹170</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>SCHEZWAN NOODLES</span><span className="font-mono text-[#e6b34d]">₹140 &nbsp; ₹150 &nbsp; ₹180</span></div>
+                  </div>
+                </div>
               </div>
             </div>
-            <Link
-              href={`/print/bill/${completedBillId}`}
-              target="_blank"
-              className="flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-3.5 py-2 rounded-xl transition shadow-sm"
-            >
-              <Receipt className="w-3.5 h-3.5" /> View Receipt
-            </Link>
+
+            {/* Footer Contact */}
+            <div className="text-center pt-4 border-t border-[#d49e38]/30 text-stone-300 font-bold text-xs flex justify-center items-center gap-2">
+              <Phone className="w-4 h-4 text-[#d49e38]" />
+              <span>+91 9946238246, +91 7511104923</span>
+            </div>
           </div>
         )}
 
-        {/* Text-Only Food Items List */}
-        <div className="space-y-3">
-          {filteredItems.map((item) => {
-            const inCart = cart.find((ci) => ci.menuItem.id === item.id);
+        {/* ------------------------------------------------------------------ */}
+        {/* PAGE 2: JUICES & DESSERTS MENU (Matching Physical Photo 1)        */}
+        {/* ------------------------------------------------------------------ */}
+        {activeTab === 'beverages' && (
+          <div className="bg-[#28201c] border-[3px] border-[#d49e38]/70 rounded-3xl p-4 sm:p-8 shadow-2xl space-y-6 relative overflow-hidden">
+            {/* Corner Gold Accents */}
+            <div className="absolute top-0 left-0 w-14 h-14 border-t-[3px] border-l-[3px] border-[#d49e38] rounded-tl-2xl pointer-events-none" />
+            <div className="absolute top-0 right-0 w-14 h-14 border-t-[3px] border-r-[3px] border-[#d49e38] rounded-tr-2xl pointer-events-none" />
+            <div className="absolute bottom-0 left-0 w-14 h-14 border-b-[3px] border-l-[3px] border-[#d49e38] rounded-bl-2xl pointer-events-none" />
+            <div className="absolute bottom-0 right-0 w-14 h-14 border-b-[3px] border-r-[3px] border-[#d49e38] rounded-br-2xl pointer-events-none" />
 
-            return (
-              <div
-                key={item.id}
-                className={`bg-white border rounded-2xl p-4 flex items-center justify-between gap-4 transition shadow-sm ${
-                  !item.is_available ? 'opacity-60 border-slate-200' : 'border-slate-200 hover:border-indigo-300'
-                }`}
-              >
-                <div className="space-y-1 flex-1">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-extrabold text-slate-900 text-base">{item.name}</h3>
-                    {!item.is_available && (
-                      <span className="text-[10px] uppercase font-bold px-2 py-0.5 rounded bg-rose-50 text-rose-600 border border-rose-200">
-                        Sold Out
-                      </span>
-                    )}
-                  </div>
-                  {item.description && (
-                    <p className="text-xs text-slate-500 leading-relaxed line-clamp-2">{item.description}</p>
-                  )}
-                  <p className="text-base font-black text-indigo-600 pt-1">
-                    {formatCurrency(item.price, sym)}
-                  </p>
-                </div>
-
-                {/* Add / Remove buttons */}
-                <div>
-                  {item.is_available ? (
-                    inCart ? (
-                      <div className="flex items-center gap-2 bg-slate-100 border border-slate-200 rounded-xl p-1">
-                        <button
-                          onClick={() => removeFromCart(item.id)}
-                          className="w-7 h-7 rounded-lg bg-slate-200 hover:bg-slate-300 text-slate-800 flex items-center justify-center transition"
-                        >
-                          <Minus className="w-3.5 h-3.5" />
-                        </button>
-                        <span className="text-sm font-black w-5 text-center text-slate-900">{inCart.quantity}</span>
-                        <button
-                          onClick={() => addToCart(item)}
-                          className="w-7 h-7 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white flex items-center justify-center transition"
-                        >
-                          <Plus className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    ) : (
-                      <button
-                        onClick={() => addToCart(item)}
-                        className="flex items-center gap-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-600 border border-indigo-200 px-3.5 py-2 rounded-xl text-xs font-bold transition"
-                      >
-                        <Plus className="w-3.5 h-3.5" /> Add
-                      </button>
-                    )
-                  ) : null}
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </main>
-
-      {/* Floating Bottom Cart Bar */}
-      {cart.length > 0 && (
-        <div className="fixed bottom-0 inset-x-0 bg-white/95 backdrop-blur-md border-t border-slate-200 p-4 z-40 shadow-lg">
-          <div className="max-w-3xl mx-auto flex items-center justify-between">
-            <div>
-              <p className="text-xs text-slate-500 font-bold">{totalCartCount} items selected</p>
-              <p className="text-xl font-black text-slate-900">{formatCurrency(cartSubtotal, sym)}</p>
+            {/* Restaurant Header */}
+            <div className="text-center space-y-1 pt-2 pb-4 border-b border-[#d49e38]/30">
+              <h1 className="text-4xl sm:text-6xl font-serif font-bold text-[#e6b34d] tracking-tight">Galaxy</h1>
+              <p className="text-base sm:text-xl font-serif text-stone-200 uppercase tracking-widest font-medium">
+                Bamboo hut restaurant
+              </p>
             </div>
 
-            <button
-              onClick={() => setIsCheckoutOpen(true)}
-              className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm px-6 py-3 rounded-xl shadow-md shadow-indigo-600/20 transition"
-            >
-              <ShoppingBag className="w-4 h-4" /> Generate Bill
-            </button>
-          </div>
-        </div>
-      )}
+            {/* 2-Column Physical Grid */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-stone-100 text-xs">
+              
+              {/* LEFT COLUMN: Fresh Juice, Avil Milk, Mojitos */}
+              <div className="space-y-6">
+                {/* FRESH JUICE */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    FRESH JUICE
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>LIME</span><span>₹25</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MINT LIME</span><span>₹30</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>WATER MELON</span><span>₹40</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PAPPAYA</span><span>₹40</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>SHAMAM</span><span>₹50</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PINEAPPLE</span><span>₹50</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GRAPE</span><span>₹50</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>ORANGE</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MANGO</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>APPLE</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MUSAMBI</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>ANAR</span><span>₹80</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PINE APPLE LIME</span><span>₹35</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GRAPE LIME</span><span>₹40</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>LIME SODA</span><span>₹30</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GINGER LIME</span><span>₹30</span></div>
+                  </div>
+                </div>
 
-      {/* Modal Checkout */}
-      {isCheckoutOpen && (
-        <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-white border border-slate-200 w-full max-w-md rounded-2xl p-6 space-y-5 shadow-2xl">
-            <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                <Receipt className="w-5 h-5 text-indigo-600" /> Checkout & Generate Bill
-              </h3>
-              <button onClick={() => setIsCheckoutOpen(false)} className="text-slate-400 hover:text-slate-700">
-                <X className="w-5 h-5" />
-              </button>
+                {/* AVIL MILK */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    AVIL MILK
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>AVIL MILK NORMAL</span><span>₹50</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>AVIL MILK SPECIAL</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BUTTERSCOTCH AVIL MILK</span><span>₹80</span></div>
+                  </div>
+                </div>
+
+                {/* MOJITOS */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    MOJITOS
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GREEN APPLE</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>STRAWBERRY</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MINT LIME</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>RED CAROCCA</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BLUEBERRY</span><span>₹70</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BLUE CARACCO</span><span>₹70</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BLACK CURRENT</span><span>₹70</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>RED CHILLY</span><span>₹70</span></div>
+                  </div>
+                </div>
+              </div>
+
+              {/* RIGHT COLUMN: Milk Shakes, Ice Cream, Falooda */}
+              <div className="space-y-6">
+                {/* MILK SHAKES */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    MILK SHAKES
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>SHAMAM</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>OREO</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>STRAWBERRY</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>SHARJA</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHIKKU</span><span>₹60</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MANGO</span><span>₹70</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>APPLE</span><span>₹70</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BLUEBERRY</span><span>₹80</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BUTTERSCOCH</span><span>₹80</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>DATES</span><span>₹80</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHOCO CRUNCH</span><span>₹80</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>DAIRY MILK</span><span>₹90</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CASHEW</span><span>₹90</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>SNICKERS</span><span>₹90</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>KIT-KAT</span><span>₹90</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>FRENCH VANILA</span><span>₹90</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>ANAR</span><span>₹90</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BADAM</span><span>₹100</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>PEANUT BUTTER</span><span>₹100</span></div>
+                  </div>
+                </div>
+
+                {/* ICE CREAM SCOOPS */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    ICE CREAM SCOOPS
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>VANILA</span><span>₹30</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>STRAWBERRY</span><span>₹30</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MANGO</span><span>₹40</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>CHOCOLATE</span><span>₹40</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>BUTTERSCOTCH</span><span>₹40</span></div>
+                  </div>
+                </div>
+
+                {/* FALOODA */}
+                <div className="space-y-2">
+                  <div className="bg-[#d49e38] text-black font-black px-3 py-1 text-xs uppercase tracking-widest rounded-sm shadow">
+                    FALOODA
+                  </div>
+                  <div className="space-y-1 font-bold text-stone-200">
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>MEXICAN FALODA</span><span>₹140</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>GALAXY FALODA</span><span>₹150</span></div>
+                    <div className="flex justify-between border-b border-stone-700/60 pb-1"><span>FEUIT MAGIC</span><span>₹100</span></div>
+                  </div>
+                </div>
+              </div>
             </div>
 
-            <div className="space-y-4">
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Customer Name (Optional)</label>
-                <input
-                  type="text"
-                  placeholder="e.g. John Doe"
-                  value={customerName}
-                  onChange={(e) => setCustomerName(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
-                <input
-                  type="tel"
-                  placeholder="e.g. 9876543210"
-                  value={customerPhone}
-                  onChange={(e) => setCustomerPhone(e.target.value)}
-                  className="w-full bg-slate-50 border border-slate-200 rounded-xl px-3.5 py-2 text-sm text-slate-900 focus:outline-none focus:border-indigo-600"
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-slate-700 mb-1">Payment Mode</label>
-                <div className="grid grid-cols-3 gap-2">
-                  {(['upi', 'cash', 'card'] as PaymentMode[]).map((mode) => (
-                    <button
-                      key={mode}
-                      type="button"
-                      onClick={() => setPaymentMode(mode)}
-                      className={`py-2 rounded-xl text-xs font-bold uppercase border transition ${
-                        paymentMode === mode
-                          ? 'bg-indigo-50 border-indigo-600 text-indigo-600'
-                          : 'bg-slate-50 border-slate-200 text-slate-600'
-                      }`}
-                    >
-                      {mode}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Order Summary Box */}
-              <div className="bg-slate-50 rounded-xl p-3 text-xs space-y-1.5 border border-slate-200">
-                <div className="flex justify-between text-slate-600">
-                  <span>Subtotal</span>
-                  <span>{formatCurrency(cartSubtotal, sym)}</span>
-                </div>
-                {(settings?.tax_rate_percent || 0) > 0 && (
-                  <div className="flex justify-between text-slate-600">
-                    <span>Tax ({(settings?.tax_rate_percent || 0)}%)</span>
-                    <span>{formatCurrency(cartSubtotal * ((settings?.tax_rate_percent || 0) / 100), sym)}</span>
-                  </div>
-                )}
-                <div className="flex justify-between font-bold text-slate-900 text-sm pt-1 border-t border-slate-200">
-                  <span>Grand Total</span>
-                  <span className="text-indigo-600">
-                    {formatCurrency(cartSubtotal * (1 + (settings?.tax_rate_percent || 0) / 100), sym)}
-                  </span>
-                </div>
-              </div>
-
-              <button
-                onClick={handleGenerateBill}
-                disabled={isSubmitting}
-                className="w-full py-3 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-sm shadow-md shadow-indigo-600/20 transition disabled:opacity-50"
-              >
-                {isSubmitting ? 'Generating Bill...' : 'Confirm & Print Bill'}
-              </button>
+            {/* Footer Contact */}
+            <div className="text-center pt-4 border-t border-[#d49e38]/30 text-stone-300 font-bold text-xs flex justify-center items-center gap-2">
+              <Phone className="w-4 h-4 text-[#d49e38]" />
+              <span>7511104923, 9946238246</span>
             </div>
           </div>
-        </div>
-      )}
+        )}
+
+      </div>
     </div>
   );
 }
