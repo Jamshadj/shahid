@@ -77,21 +77,29 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
         style={{ color: '#000000', backgroundColor: '#ffffff' }}
       >
         {/* Header */}
-        <div className="text-center space-y-1 pb-2 border-b-2 border-black">
-          <h2 className="font-extrabold text-sm uppercase tracking-wider">{settings?.restaurant_name || 'GALAXY BAMBOO HUT'}</h2>
-          {settings?.address && <p className="text-[10px] uppercase">{settings.address}</p>}
-          {settings?.phone_number && <p className="text-[10px]">PH: {settings.phone_number}</p>}
-          {settings?.tax_number_gst && <p className="text-[10px]">GSTIN: {settings.tax_number_gst}</p>}
+        <div className="text-center space-y-0.5 pb-2 border-b-2 border-black">
+          <h2 className="font-extrabold text-sm uppercase tracking-wider">
+            {settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE'}
+          </h2>
+          <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
+          {settings?.address && <p className="text-[10px] uppercase font-bold">{settings.address}</p>}
+          {settings?.phone_number && <p className="text-[10px] font-bold">Ph: {settings.phone_number}</p>}
         </div>
 
         {/* Invoice Header Details */}
         <div className="py-2 space-y-0.5 border-b border-black text-[10px]">
-          <div className="flex justify-between font-bold">
-            <span>BILL NO: #{bill.bill_number}</span>
+          <div className="text-center font-black uppercase tracking-wider py-0.5 border-y border-black text-xs my-1">
+            RESTAURANT CASH BILL
+          </div>
+          <div className="flex justify-between font-black text-xs">
+            <span>TOKEN NUMBER: #{bill.bill_number % 100 || bill.bill_number}</span>
             <span>MODE: {bill.payment_mode.toUpperCase()}</span>
           </div>
-          <div>DATE: {formatDate(bill.created_at)}</div>
-          {bill.customer_name && <div>CUST: {bill.customer_name}</div>}
+          <div className="flex justify-between font-bold">
+            <span>Bill: BILL-{bill.bill_number}</span>
+            <span>Date: {formatDate(bill.created_at)}</span>
+          </div>
+          {bill.customer_name && bill.customer_name !== 'Walk-in Customer' && <div>CUST: {bill.customer_name}</div>}
           {bill.customer_phone && <div>MOB: {bill.customer_phone}</div>}
         </div>
 

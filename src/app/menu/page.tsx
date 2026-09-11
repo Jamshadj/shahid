@@ -205,7 +205,7 @@ export default function PublicMenuPage() {
             {/* Footer Contact */}
             <div className="text-center pt-4 border-t border-[#d49e38]/30 text-stone-300 font-bold text-xs flex justify-center items-center gap-2">
               <Phone className="w-4 h-4 text-[#d49e38]" />
-              <span>+91 9946238246, +91 7511104923</span>
+              <span>+91 75580 60207</span>
             </div>
           </div>
         )}

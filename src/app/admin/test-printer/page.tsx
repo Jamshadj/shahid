@@ -77,20 +77,28 @@ export default function TestPrinterPage() {
             className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-xl border border-slate-300 rounded-sm w-[80mm] max-w-[80mm] my-4"
           >
             {/* Header */}
-            <div className="text-center space-y-1 pb-2 border-b-2 border-black">
-              <h2 className="font-extrabold text-sm uppercase">GALAXY BAMBOO HUT</h2>
-              <p className="text-[10px]">AYYAPPANKAVU, VANDITHAVALAM</p>
-              <p className="text-[10px]">PH: +91 9946238246</p>
+            <div className="text-center space-y-0.5 pb-2 border-b-2 border-black">
+              <h2 className="font-extrabold text-sm uppercase tracking-wider">
+                GALAXY RESTAURANT KARUNA MEDICAL COLLEGE
+              </h2>
+              <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
+              <p className="text-[10px] uppercase font-bold">Vilayodi, Chittur, Palakkad, Kerala</p>
+              <p className="text-[10px] font-bold">Ph: +91 75580 60207</p>
             </div>
 
             {/* Meta */}
             <div className="py-2 space-y-0.5 border-b border-black text-[10px]">
-              <div className="flex justify-between font-bold">
-                <span>BILL NO: #1001</span>
+              <div className="text-center font-black uppercase tracking-wider py-0.5 border-y border-black text-xs my-1">
+                RESTAURANT CASH BILL
+              </div>
+              <div className="flex justify-between font-black text-xs">
+                <span>TOKEN NUMBER: #124</span>
                 <span>MODE: CASH</span>
               </div>
-              <div>DATE: {new Date().toLocaleDateString('en-IN')}</div>
-              <div>CUST: Walk-in Customer</div>
+              <div className="flex justify-between font-bold">
+                <span>Bill: BILL-1024</span>
+                <span>Date: {new Date().toLocaleDateString('en-IN')}</span>
+              </div>
             </div>
 
             {/* Table */}

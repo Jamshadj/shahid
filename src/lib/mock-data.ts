@@ -2,9 +2,9 @@ import { StoreSettings, Category, MenuItem, BillWithItems } from '@/types/databa
 
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   id: 'store-1',
-  restaurant_name: 'Galaxy Bamboo Hut Restaurant',
-  phone_number: '+91 9946238246, +91 7511104923',
-  address: 'Ayyappankavu, Vandithavalam',
+  restaurant_name: 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE',
+  phone_number: '+91 75580 60207',
+  address: 'Vilayodi, Chittur, Palakkad, Kerala',
   tax_rate_percent: 0.0,
   tax_number_gst: null,
   currency_symbol: '₹',
