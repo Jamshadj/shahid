@@ -168,25 +168,27 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
           </tbody>
         </table>
 
-        {/* Calculation Summary */}
-        <div className="space-y-1 text-[10px] border-b-2 border-black pb-2">
-          <div className="flex justify-between">
-            <span className="font-bold">SUBTOTAL:</span>
-            <span className="font-bold">{formatPrintMoney(bill.subtotal)}</span>
-          </div>
+        {/* Calculation Summary Table */}
+        <table className="w-full text-[10px] border-b-2 border-black pb-2 my-1 font-bold">
+          <tbody>
+            <tr>
+              <td className="py-0.5">SUBTOTAL:</td>
+              <td className="py-0.5 text-right">{formatPrintMoney(bill.subtotal)}</td>
+            </tr>
 
-          {bill.discount_amount > 0 && (
-            <div className="flex justify-between font-bold">
-              <span>DISCOUNT:</span>
-              <span>-{formatPrintMoney(bill.discount_amount)}</span>
-            </div>
-          )}
+            {bill.discount_amount > 0 && (
+              <tr>
+                <td className="py-0.5">DISCOUNT:</td>
+                <td className="py-0.5 text-right">-{formatPrintMoney(bill.discount_amount)}</td>
+              </tr>
+            )}
 
-          <div className="flex justify-between text-sm font-black pt-1 border-t border-black">
-            <span>GRAND TOTAL:</span>
-            <span>{formatPrintMoney(bill.grand_total)}</span>
-          </div>
-        </div>
+            <tr className="text-sm font-black border-t border-black">
+              <td className="pt-1">GRAND TOTAL:</td>
+              <td className="pt-1 text-right">{formatPrintMoney(bill.grand_total)}</td>
+            </tr>
+          </tbody>
+        </table>
 
         {/* Footer */}
         <div className="text-center pt-3 text-[10px] space-y-1">

@@ -163,17 +163,19 @@ export default function TestPrinterPage() {
               </tbody>
             </table>
 
-            {/* Calculation */}
-            <div className="space-y-1 text-[10px] border-b-2 border-black pb-2">
-              <div className="flex justify-between">
-                <span className="font-bold">SUBTOTAL:</span>
-                <span className="font-bold">Rs. 540.00</span>
-              </div>
-              <div className="flex justify-between text-sm font-black pt-1 border-t border-black">
-                <span>GRAND TOTAL:</span>
-                <span>Rs. 540.00</span>
-              </div>
-            </div>
+            {/* Calculation Summary Table */}
+            <table className="w-full text-[10px] border-b-2 border-black pb-2 my-1 font-bold">
+              <tbody>
+                <tr>
+                  <td className="py-0.5">SUBTOTAL:</td>
+                  <td className="py-0.5 text-right">Rs. 540.00</td>
+                </tr>
+                <tr className="text-sm font-black border-t border-black">
+                  <td className="pt-1">GRAND TOTAL:</td>
+                  <td className="pt-1 text-right">Rs. 540.00</td>
+                </tr>
+              </tbody>
+            </table>
 
             {/* Footer */}
             <div className="text-center pt-3 text-[10px] space-y-1">
