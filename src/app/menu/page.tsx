@@ -58,7 +58,7 @@ export default function PublicMenuPage() {
             </div>
 
             {/* 2-Column Physical Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-stone-100 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-stone-100 text-[11px] sm:text-xs">
               
               {/* LEFT COLUMN: Poratta, Non Veg Curry, Veg Curry */}
               <div className="space-y-6">
@@ -230,7 +230,7 @@ export default function PublicMenuPage() {
             </div>
 
             {/* 2-Column Physical Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-stone-100 text-xs">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6 text-stone-100 text-[11px] sm:text-xs">
               
               {/* LEFT COLUMN: Fresh Juice, Avil Milk, Mojitos */}
               <div className="space-y-6">
