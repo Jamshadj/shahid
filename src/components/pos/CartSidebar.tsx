@@ -9,6 +9,7 @@ interface CartSidebarProps {
   onUpdateQuantity: (itemId: string, delta: number) => void;
   onRemoveItem: (itemId: string) => void;
   onClearCart: () => void;
+  onCloseMobileCart?: () => void;
   onGenerateBill: (params: {
     customer_name: string;
     customer_phone: string;
@@ -24,6 +25,7 @@ export default function CartSidebar({
   onUpdateQuantity,
   onRemoveItem,
   onClearCart,
+  onCloseMobileCart,
   onGenerateBill,
 }: CartSidebarProps) {
   const [customerName, setCustomerName] = useState('');
@@ -55,6 +57,7 @@ export default function CartSidebar({
       setCustomerName('');
       setCustomerPhone('');
       setDiscountAmount(0);
+      if (onCloseMobileCart) onCloseMobileCart();
     } finally {
       setIsSubmitting(false);
     }
@@ -75,14 +78,24 @@ export default function CartSidebar({
           <Receipt className="w-5 h-5 text-indigo-600" />
           <h3 className="font-extrabold text-slate-900 text-base">Current Bill Order</h3>
         </div>
-        {cart.length > 0 && (
-          <button
-            onClick={onClearCart}
-            className="text-xs text-rose-600 hover:text-rose-700 font-bold transition"
-          >
-            Clear All
-          </button>
-        )}
+        <div className="flex items-center gap-2">
+          {cart.length > 0 && (
+            <button
+              onClick={onClearCart}
+              className="text-xs text-rose-600 hover:text-rose-700 font-bold transition"
+            >
+              Clear All
+            </button>
+          )}
+          {onCloseMobileCart && (
+            <button
+              onClick={onCloseMobileCart}
+              className="md:hidden text-slate-400 hover:text-slate-700 font-bold p-1"
+            >
+              ✕
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Cart Items List */}

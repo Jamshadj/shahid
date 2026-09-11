@@ -92,14 +92,14 @@ export default function AdminDashboardPage() {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Time Filter Buttons */}
-          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1">
+          <div className="bg-slate-100 p-1 rounded-xl border border-slate-200 flex items-center gap-1 overflow-x-auto">
             {(['today', 'yesterday', 'week', 'all'] as const).map((filter) => (
               <button
                 key={filter}
                 onClick={() => setTimeFilter(filter)}
-                className={`px-3 py-1.5 rounded-lg text-xs font-bold capitalize transition ${
+                className={`px-2.5 sm:px-3 py-1.5 rounded-lg text-[11px] sm:text-xs font-bold capitalize transition ${
                   timeFilter === filter
                     ? 'bg-indigo-600 text-white shadow-sm'
                     : 'text-slate-600 hover:text-slate-900'
@@ -112,7 +112,7 @@ export default function AdminDashboardPage() {
 
           <button
             onClick={loadData}
-            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200"
+            className="p-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 transition border border-slate-200 shrink-0"
             title="Refresh Data"
           >
             <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
@@ -120,7 +120,7 @@ export default function AdminDashboardPage() {
 
           <Link
             href="/pos"
-            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-xl text-xs font-extrabold shadow-md shadow-indigo-600/20 transition"
+            className="flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3.5 py-2 rounded-xl text-xs font-extrabold shadow-md shadow-indigo-600/20 transition shrink-0"
           >
             <Plus className="w-4 h-4" /> New Bill
           </Link>
