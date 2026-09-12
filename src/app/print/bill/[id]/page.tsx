@@ -7,40 +7,23 @@ import { formatDate } from '@/lib/utils';
 import { Printer, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
-// ── Thermal Printer Text Formatting Helpers ──
-// The TENAX TN260 80mm thermal printer ignores all CSS layout
-// (text-align, table widths, flexbox). The ONLY way to align
-// columns is monospace pre-formatted text with space padding.
-// 80mm paper with standard thermal font ≈ 42 chars per line.
-const LINE_WIDTH = 42;
+// ── Thermal Printer Text Formatting ──
+// TENAX TN260 80mm ignores ALL CSS layout.
+// From physical testing: ~38 chars fit per line at 12px mono.
+// Using 32 for guaranteed safety on all 80mm printers.
+const W = 32;
 
-function centerText(text: string, width: number = LINE_WIDTH): string {
-  if (text.length >= width) return text;
-  const pad = Math.floor((width - text.length) / 2);
-  return ' '.repeat(pad) + text;
-}
+const center = (t: string) => {
+  if (t.length >= W) return t;
+  return ' '.repeat(Math.floor((W - t.length) / 2)) + t;
+};
 
-function leftRight(left: string, right: string, width: number = LINE_WIDTH): string {
-  const space = width - left.length - right.length;
-  if (space <= 0) return left + ' ' + right;
-  return left + ' '.repeat(space) + right;
-}
+const lr = (l: string, r: string) => {
+  const gap = W - l.length - r.length;
+  return gap <= 0 ? l + ' ' + r : l + ' '.repeat(gap) + r;
+};
 
-function dashedLine(width: number = LINE_WIDTH): string {
-  return '-'.repeat(width);
-}
-
-function formatItemLine(qty: string, rate: string, amt: string, width: number = LINE_WIDTH): string {
-  // Item name gets flexible width, rate=10 chars, amt=10 chars
-  const rateWidth = 10;
-  const amtWidth = 10;
-  const nameWidth = width - rateWidth - amtWidth;
-  const paddedRate = rate.padStart(rateWidth);
-  const paddedAmt = amt.padStart(amtWidth);
-  // If item name is longer than nameWidth, it will wrap naturally in <pre> 
-  const paddedName = qty.length > nameWidth ? qty : qty.padEnd(nameWidth);
-  return paddedName + paddedRate + paddedAmt;
-}
+const dash = () => '-'.repeat(W);
 
 export default function PrintBillPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -55,13 +38,7 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
       setBill(b);
       setSettings(s);
       setLoading(false);
-
-      // Auto-trigger print dialog after render
-      setTimeout(() => {
-        if (b) {
-          window.print();
-        }
-      }, 400);
+      setTimeout(() => { if (b) window.print(); }, 400);
     });
   }, [billId]);
 
@@ -80,101 +57,101 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  const fmtMoney = (val: number) => `Rs.${val.toFixed(2)}`;
+  const money = (v: number) => `Rs.${v.toFixed(2)}`;
 
-  const storeName = settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE';
-  const tagline = 'Fresh Meals, Quick Bites, Biryani & Refreshing Beverages';
-  const address = settings?.address || 'VILAYODI, CHITTUR, PALAKKAD, KERALA';
+  const name = settings?.restaurant_name || 'GALAXY RESTAURANT';
+  const name2 = 'KARUNA MEDICAL COLLEGE';
+  const tag = 'Fresh Meals, Quick Bites,';
+  const tag2 = 'Biryani & Beverages';
+  const addr = settings?.address || 'Vilayodi, Chittur, Palakkad';
   const phone = settings?.phone_number || '+91 99461 04923';
-  const tokenNo = bill.bill_number % 100 || bill.bill_number;
-  const dateStr = formatDate(bill.created_at);
+  const token = bill.bill_number % 100 || bill.bill_number;
 
-  // Build the entire receipt as pre-formatted monospace text lines
-  const lines: string[] = [];
+  const L: string[] = [];
 
   // Header
-  lines.push(centerText(storeName));
-  lines.push(centerText(tagline));
-  lines.push(centerText(address));
-  lines.push(centerText(`Ph: ${phone}`));
-  lines.push(dashedLine());
+  L.push(center(name));
+  L.push(center(name2));
+  L.push(center(tag));
+  L.push(center(tag2));
+  L.push(center(addr));
+  L.push(center('Ph: ' + phone));
+  L.push(dash());
 
   // Title
-  lines.push(centerText('RESTAURANT CASH BILL'));
-  lines.push(dashedLine());
+  L.push(center('RESTAURANT CASH BILL'));
+  L.push(dash());
 
-  // Metadata — each on its own line to avoid merging
-  lines.push(`TOKEN NO: #${tokenNo}`);
-  lines.push(`MODE: ${bill.payment_mode.toUpperCase()}`);
-  lines.push(`Bill: BILL-${bill.bill_number}`);
-  lines.push(`Date: ${dateStr}`);
+  // Meta
+  L.push(lr('TOKEN NO: #' + token, 'MODE: ' + bill.payment_mode.toUpperCase()));
+  L.push('Bill: BILL-' + bill.bill_number);
+  L.push('Date: ' + formatDate(bill.created_at));
   if (bill.customer_name && bill.customer_name !== 'Walk-in Customer') {
-    lines.push(`CUST: ${bill.customer_name}`);
+    L.push('CUST: ' + bill.customer_name);
   }
   if (bill.customer_phone) {
-    lines.push(`MOB: ${bill.customer_phone}`);
+    L.push('MOB: ' + bill.customer_phone);
   }
-  lines.push(dashedLine());
+  L.push(dash());
 
-  // Items header
-  lines.push(formatItemLine('QTY ITEM', 'RATE', 'AMT'));
-  lines.push(dashedLine());
+  // Items — 2-line format for each item
+  // Line 1: item name
+  // Line 2: right-aligned rate and amount
+  L.push(lr('ITEM', 'RATE     AMT'));
+  L.push(dash());
 
-  // Items
   bill.bill_items?.forEach((item) => {
-    const name = `${item.quantity} x ${item.item_name}`;
-    const rate = item.unit_price.toFixed(2);
-    const amt = item.total_price.toFixed(2);
-    lines.push(formatItemLine(name, rate, amt));
+    // Line 1: qty x item name
+    L.push(`${item.quantity} x ${item.item_name}`);
+    // Line 2: rate right-padded + amount right-aligned
+    const rateStr = item.unit_price.toFixed(2);
+    const amtStr = item.total_price.toFixed(2);
+    const numLine = rateStr.padStart(10) + amtStr.padStart(10);
+    L.push(numLine.padStart(W));
   });
-  lines.push(dashedLine());
+  L.push(dash());
 
   // Totals
-  lines.push(leftRight('SUBTOTAL:', fmtMoney(bill.subtotal)));
+  L.push(lr('SUBTOTAL:', money(bill.subtotal)));
   if (bill.discount_amount > 0) {
-    lines.push(leftRight('DISCOUNT:', `-${fmtMoney(bill.discount_amount)}`));
+    L.push(lr('DISCOUNT:', '-' + money(bill.discount_amount)));
   }
-  lines.push(dashedLine());
-  lines.push(leftRight('GRAND TOTAL:', fmtMoney(bill.grand_total)));
-  lines.push(dashedLine());
+  L.push(dash());
+  L.push(lr('GRAND TOTAL:', money(bill.grand_total)));
+  L.push(dash());
 
   // Footer
-  lines.push('');
-  lines.push(centerText('*** THANK YOU! VISIT AGAIN ***'));
+  L.push('');
+  L.push(center('*** THANK YOU! ***'));
+  L.push(center('VISIT AGAIN'));
 
-  const receiptText = lines.join('\n');
+  const receipt = L.join('\n');
 
   return (
     <div className="min-h-screen bg-slate-100 p-2 md:p-8 flex flex-col items-center justify-center font-sans">
       
-      {/* Global CSS for Perfect Thermal Printing */}
       <style jsx global>{`
         @media print {
-          @page {
-            size: 80mm auto;
-            margin: 0;
-          }
+          @page { size: 80mm auto; margin: 0; }
           body {
-            background-color: #ffffff !important;
-            color: #000000 !important;
+            background: #fff !important;
+            color: #000 !important;
             margin: 0 !important;
             padding: 0 !important;
           }
-          .print-hidden, .print\\:hidden {
-            display: none !important;
-          }
+          .print-hidden, .print\\:hidden { display: none !important; }
           #printable-receipt {
             width: 80mm !important;
             max-width: 80mm !important;
             box-shadow: none !important;
             border: none !important;
             margin: 0 !important;
-            padding: 2mm 3mm !important;
+            padding: 1mm 2mm !important;
           }
         }
       `}</style>
 
-      {/* On-screen Action Bar (Hidden during printing) */}
+      {/* Action Bar — hidden on print */}
       <div className="w-full max-w-sm mb-6 flex items-center justify-between print:hidden">
         <Link
           href="/pos"
@@ -182,7 +159,6 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
         >
           <ArrowLeft className="w-3.5 h-3.5" /> Back to POS
         </Link>
-
         <button
           onClick={() => window.print()}
           className="flex items-center gap-2 bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold text-xs px-5 py-2.5 rounded-xl shadow-md shadow-indigo-600/20 transition"
@@ -191,24 +167,24 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
         </button>
       </div>
 
-      {/* Printable Thermal Receipt — Pure Monospace Pre-formatted Text */}
+      {/* Thermal Receipt */}
       <div
         id="printable-receipt"
         className="bg-white text-black shadow-2xl rounded-sm w-[80mm] max-w-[80mm]"
-        style={{ color: '#000000', backgroundColor: '#ffffff' }}
+        style={{ color: '#000', backgroundColor: '#fff' }}
       >
-        <pre
-          style={{
-            fontFamily: 'monospace',
-            fontSize: '12px',
-            lineHeight: '1.4',
-            whiteSpace: 'pre-wrap',
-            wordBreak: 'break-word',
-            margin: 0,
-            padding: '8px',
-          }}
-        >{receiptText}</pre>
+        <pre style={{
+          fontFamily: 'monospace',
+          fontSize: '12px',
+          lineHeight: '1.4',
+          whiteSpace: 'pre-wrap',
+          wordBreak: 'break-word',
+          margin: 0,
+          padding: '6px',
+        }}>{receipt}</pre>
       </div>
     </div>
   );
 }
+
+
