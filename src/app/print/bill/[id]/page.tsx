@@ -7,6 +7,41 @@ import { formatDate } from '@/lib/utils';
 import { Printer, ArrowLeft } from 'lucide-react';
 import Link from 'next/link';
 
+// ── Thermal Printer Text Formatting Helpers ──
+// The TENAX TN260 80mm thermal printer ignores all CSS layout
+// (text-align, table widths, flexbox). The ONLY way to align
+// columns is monospace pre-formatted text with space padding.
+// 80mm paper with standard thermal font ≈ 42 chars per line.
+const LINE_WIDTH = 42;
+
+function centerText(text: string, width: number = LINE_WIDTH): string {
+  if (text.length >= width) return text;
+  const pad = Math.floor((width - text.length) / 2);
+  return ' '.repeat(pad) + text;
+}
+
+function leftRight(left: string, right: string, width: number = LINE_WIDTH): string {
+  const space = width - left.length - right.length;
+  if (space <= 0) return left + ' ' + right;
+  return left + ' '.repeat(space) + right;
+}
+
+function dashedLine(width: number = LINE_WIDTH): string {
+  return '-'.repeat(width);
+}
+
+function formatItemLine(qty: string, rate: string, amt: string, width: number = LINE_WIDTH): string {
+  // Item name gets flexible width, rate=10 chars, amt=10 chars
+  const rateWidth = 10;
+  const amtWidth = 10;
+  const nameWidth = width - rateWidth - amtWidth;
+  const paddedRate = rate.padStart(rateWidth);
+  const paddedAmt = amt.padStart(amtWidth);
+  // If item name is longer than nameWidth, it will wrap naturally in <pre> 
+  const paddedName = qty.length > nameWidth ? qty : qty.padEnd(nameWidth);
+  return paddedName + paddedRate + paddedAmt;
+}
+
 export default function PrintBillPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
   const billId = resolvedParams.id;
@@ -31,7 +66,7 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   }, [billId]);
 
   if (loading) {
-    return <div className="p-8 text-center text-slate-500 font-mono">Loading thermal receipt for TENAX TN260...</div>;
+    return <div className="p-8 text-center text-slate-500 font-mono">Loading receipt...</div>;
   }
 
   if (!bill) {
@@ -45,12 +80,69 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
     );
   }
 
-  // Use 'Rs. ' for physical thermal printing so thermal ESC/POS drivers never print '?' instead of '₹'
-  const printSym = 'Rs. ';
+  const fmtMoney = (val: number) => `Rs.${val.toFixed(2)}`;
 
-  const formatPrintMoney = (val: number) => {
-    return `${printSym}${val.toFixed(2)}`;
-  };
+  const storeName = settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE';
+  const tagline = 'Fresh Meals, Quick Bites, Biryani & Refreshing Beverages';
+  const address = settings?.address || 'VILAYODI, CHITTUR, PALAKKAD, KERALA';
+  const phone = settings?.phone_number || '+91 75580 60207';
+  const tokenNo = bill.bill_number % 100 || bill.bill_number;
+  const dateStr = formatDate(bill.created_at);
+
+  // Build the entire receipt as pre-formatted monospace text lines
+  const lines: string[] = [];
+
+  // Header
+  lines.push(centerText(storeName));
+  lines.push(centerText(tagline));
+  lines.push(centerText(address));
+  lines.push(centerText(`Ph: ${phone}`));
+  lines.push(dashedLine());
+
+  // Title
+  lines.push(centerText('RESTAURANT CASH BILL'));
+  lines.push(dashedLine());
+
+  // Metadata — each on its own line to avoid merging
+  lines.push(`TOKEN NO: #${tokenNo}`);
+  lines.push(`MODE: ${bill.payment_mode.toUpperCase()}`);
+  lines.push(`Bill: BILL-${bill.bill_number}`);
+  lines.push(`Date: ${dateStr}`);
+  if (bill.customer_name && bill.customer_name !== 'Walk-in Customer') {
+    lines.push(`CUST: ${bill.customer_name}`);
+  }
+  if (bill.customer_phone) {
+    lines.push(`MOB: ${bill.customer_phone}`);
+  }
+  lines.push(dashedLine());
+
+  // Items header
+  lines.push(formatItemLine('QTY ITEM', 'RATE', 'AMT'));
+  lines.push(dashedLine());
+
+  // Items
+  bill.bill_items?.forEach((item) => {
+    const name = `${item.quantity} x ${item.item_name}`;
+    const rate = item.unit_price.toFixed(2);
+    const amt = item.total_price.toFixed(2);
+    lines.push(formatItemLine(name, rate, amt));
+  });
+  lines.push(dashedLine());
+
+  // Totals
+  lines.push(leftRight('SUBTOTAL:', fmtMoney(bill.subtotal)));
+  if (bill.discount_amount > 0) {
+    lines.push(leftRight('DISCOUNT:', `-${fmtMoney(bill.discount_amount)}`));
+  }
+  lines.push(dashedLine());
+  lines.push(leftRight('GRAND TOTAL:', fmtMoney(bill.grand_total)));
+  lines.push(dashedLine());
+
+  // Footer
+  lines.push('');
+  lines.push(centerText('*** THANK YOU! VISIT AGAIN ***'));
+
+  const receiptText = lines.join('\n');
 
   return (
     <div className="min-h-screen bg-slate-100 p-2 md:p-8 flex flex-col items-center justify-center font-sans">
@@ -67,19 +159,17 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
             color: #000000 !important;
             margin: 0 !important;
             padding: 0 !important;
-            -webkit-print-color-adjust: exact;
-            print-color-adjust: exact;
           }
           .print-hidden, .print\\:hidden {
             display: none !important;
           }
           #printable-receipt {
-            width: 74mm !important;
-            max-width: 74mm !important;
+            width: 80mm !important;
+            max-width: 80mm !important;
             box-shadow: none !important;
             border: none !important;
-            margin: 0 auto !important;
-            padding: 2mm 0 !important;
+            margin: 0 !important;
+            padding: 2mm 3mm !important;
           }
         }
       `}</style>
@@ -101,99 +191,23 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
         </button>
       </div>
 
-      {/* Printable Thermal Receipt (TENAX TN260 80mm Paper Format) */}
+      {/* Printable Thermal Receipt — Pure Monospace Pre-formatted Text */}
       <div
         id="printable-receipt"
-        className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-2xl rounded-sm w-[76mm] max-w-[76mm]"
+        className="bg-white text-black shadow-2xl rounded-sm w-[80mm] max-w-[80mm]"
         style={{ color: '#000000', backgroundColor: '#ffffff' }}
       >
-        {/* Header */}
-        <div className="text-center space-y-0.5 pb-2 border-b-2 border-black">
-          <h2 className="font-extrabold text-sm uppercase tracking-wider leading-tight">
-            {settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE'}
-          </h2>
-          <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
-          {settings?.address && <p className="text-[10px] uppercase font-bold">{settings.address}</p>}
-          {settings?.phone_number && <p className="text-[10px] font-bold">Ph: {settings.phone_number}</p>}
-        </div>
-
-        {/* Cash Bill Title Bar */}
-        <div className="text-center font-black uppercase tracking-wider py-1 border-b-2 border-black text-xs my-1 bg-black text-white">
-          RESTAURANT CASH BILL
-        </div>
-
-        {/* Invoice Header Table */}
-        <table className="w-full text-left my-1 text-[10px] border-b border-black pb-1 font-bold">
-          <tbody>
-            <tr>
-              <td className="py-0.5">TOKEN NO: #{bill.bill_number % 100 || bill.bill_number}</td>
-              <td className="py-0.5 text-right uppercase">MODE: {bill.payment_mode}</td>
-            </tr>
-            <tr>
-              <td className="py-0.5">Bill: BILL-{bill.bill_number}</td>
-              <td className="py-0.5 text-right">{formatDate(bill.created_at)}</td>
-            </tr>
-            {bill.customer_name && bill.customer_name !== 'Walk-in Customer' && (
-              <tr>
-                <td colSpan={2} className="py-0.5">CUST: {bill.customer_name}</td>
-              </tr>
-            )}
-            {bill.customer_phone && (
-              <tr>
-                <td colSpan={2} className="py-0.5">MOB: {bill.customer_phone}</td>
-              </tr>
-            )}
-          </tbody>
-        </table>
-
-        {/* Items Table with Explicit Column Widths */}
-        <table className="w-full text-left my-2 text-[10px] border-b-2 border-black pb-2">
-          <thead>
-            <tr className="border-b border-black font-extrabold">
-              <th className="py-1 w-[50%]">QTY ITEM</th>
-              <th className="py-1 w-[25%] text-right pr-1">RATE</th>
-              <th className="py-1 w-[25%] text-right">AMT</th>
-            </tr>
-          </thead>
-          <tbody>
-            {bill.bill_items?.map((item) => (
-              <tr key={item.id} className="align-top">
-                <td className="py-1 pr-1 font-bold w-[50%]">
-                  {item.quantity} x {item.item_name}
-                </td>
-                <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">{item.unit_price.toFixed(2)}</td>
-                <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">{item.total_price.toFixed(2)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-
-        {/* Calculation Summary Table */}
-        <table className="w-full text-[10px] border-b-2 border-black pb-2 my-1 font-bold">
-          <tbody>
-            <tr>
-              <td className="py-0.5">SUBTOTAL:</td>
-              <td className="py-0.5 text-right">{formatPrintMoney(bill.subtotal)}</td>
-            </tr>
-
-            {bill.discount_amount > 0 && (
-              <tr>
-                <td className="py-0.5">DISCOUNT:</td>
-                <td className="py-0.5 text-right">-{formatPrintMoney(bill.discount_amount)}</td>
-              </tr>
-            )}
-
-            <tr className="text-sm font-black border-t border-black">
-              <td className="pt-1">GRAND TOTAL:</td>
-              <td className="pt-1 text-right">{formatPrintMoney(bill.grand_total)}</td>
-            </tr>
-          </tbody>
-        </table>
-
-        {/* Footer */}
-        <div className="text-center pt-3 text-[10px] space-y-1">
-          <p className="font-bold uppercase tracking-wider">*** THANK YOU! VISIT AGAIN ***</p>
-        </div>
+        <pre
+          style={{
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            lineHeight: '1.4',
+            whiteSpace: 'pre-wrap',
+            wordBreak: 'break-word',
+            margin: 0,
+            padding: '8px',
+          }}
+        >{receiptText}</pre>
       </div>
     </div>
   );
