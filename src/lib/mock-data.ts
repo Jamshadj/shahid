@@ -3,7 +3,7 @@ import { StoreSettings, Category, MenuItem, BillWithItems } from '@/types/databa
 export const DEFAULT_STORE_SETTINGS: StoreSettings = {
   id: 'store-1',
   restaurant_name: 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE',
-  phone_number: '+91 75580 60207',
+  phone_number: '+91 99461 04923',
   address: 'Vilayodi, Chittur, Palakkad, Kerala',
   tax_rate_percent: 0.0,
   tax_number_gst: null,

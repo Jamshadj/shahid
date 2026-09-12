@@ -113,7 +113,7 @@ export default function StandaloneTestPrinterPage() {
               </h2>
               <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
               <p className="text-[10px] uppercase font-bold">Vilayodi, Chittur, Palakkad, Kerala</p>
-              <p className="text-[10px] font-bold">Ph: +91 75580 60207</p>
+              <p className="text-[10px] font-bold">Ph: +91 99461 04923</p>
             </div>
 
             {/* Cash Bill Title Bar */}

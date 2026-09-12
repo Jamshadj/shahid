@@ -85,7 +85,7 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   const storeName = settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE';
   const tagline = 'Fresh Meals, Quick Bites, Biryani & Refreshing Beverages';
   const address = settings?.address || 'VILAYODI, CHITTUR, PALAKKAD, KERALA';
-  const phone = settings?.phone_number || '+91 75580 60207';
+  const phone = settings?.phone_number || '+91 99461 04923';
   const tokenNo = bill.bill_number % 100 || bill.bill_number;
   const dateStr = formatDate(bill.created_at);
 
