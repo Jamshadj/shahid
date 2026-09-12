@@ -59,22 +59,37 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
 
   const money = (v: number) => `Rs.${v.toFixed(2)}`;
 
-  const name = settings?.restaurant_name || 'GALAXY RESTAURANT';
-  const name2 = 'KARUNA MEDICAL COLLEGE';
-  const tag = 'Fresh Meals, Quick Bites,';
-  const tag2 = 'Biryani & Beverages';
-  const addr = settings?.address || 'Vilayodi, Chittur, Palakkad';
+  // Word-wrap text into centered lines that fit within W chars
+  const wrapCenter = (text: string) => {
+    const words = text.split(' ');
+    const result: string[] = [];
+    let line = '';
+    for (const word of words) {
+      if (line === '') {
+        line = word;
+      } else if (line.length + 1 + word.length <= W) {
+        line += ' ' + word;
+      } else {
+        result.push(center(line));
+        line = word;
+      }
+    }
+    if (line) result.push(center(line));
+    return result;
+  };
+
+  const storeName = settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE';
+  const tagline = 'Fresh Meals, Quick Bites, Biryani & Beverages';
+  const addr = settings?.address || 'Vilayodi, Chittur, Palakkad, Kerala';
   const phone = settings?.phone_number || '+91 99461 04923';
   const token = bill.bill_number % 100 || bill.bill_number;
 
   const L: string[] = [];
 
-  // Header
-  L.push(center(name));
-  L.push(center(name2));
-  L.push(center(tag));
-  L.push(center(tag2));
-  L.push(center(addr));
+  // Header — auto-wraps long names
+  L.push(...wrapCenter(storeName));
+  L.push(...wrapCenter(tagline));
+  L.push(...wrapCenter(addr));
   L.push(center('Ph: ' + phone));
   L.push(dash());
 
@@ -83,7 +98,7 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   L.push(dash());
 
   // Meta
-  L.push(lr('TOKEN NO: #' + token, 'MODE: ' + bill.payment_mode.toUpperCase()));
+  L.push(lr('TOKEN: #' + token, bill.payment_mode.toUpperCase()));
   L.push('Bill: BILL-' + bill.bill_number);
   L.push('Date: ' + formatDate(bill.created_at));
   if (bill.customer_name && bill.customer_name !== 'Walk-in Customer') {
@@ -94,20 +109,15 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   }
   L.push(dash());
 
-  // Items — 2-line format for each item
-  // Line 1: item name
-  // Line 2: right-aligned rate and amount
+  // Items — 2-line format
   L.push(lr('ITEM', 'RATE     AMT'));
   L.push(dash());
 
   bill.bill_items?.forEach((item) => {
-    // Line 1: qty x item name
     L.push(`${item.quantity} x ${item.item_name}`);
-    // Line 2: rate right-padded + amount right-aligned
-    const rateStr = item.unit_price.toFixed(2);
-    const amtStr = item.total_price.toFixed(2);
-    const numLine = rateStr.padStart(10) + amtStr.padStart(10);
-    L.push(numLine.padStart(W));
+    const r = item.unit_price.toFixed(2);
+    const a = item.total_price.toFixed(2);
+    L.push((r.padStart(10) + a.padStart(10)).padStart(W));
   });
   L.push(dash());
 
