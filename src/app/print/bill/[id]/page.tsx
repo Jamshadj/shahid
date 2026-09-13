@@ -98,8 +98,8 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   L.push(center('RESTAURANT CASH BILL'));
   L.push(dash());
 
-  // Meta
-  L.push(lr('TOKEN: #' + token, bill.payment_mode.toUpperCase()));
+  // Meta — compact format
+  L.push(`TOKEN: #${token}  |  ${bill.payment_mode.toUpperCase()}`);
   L.push('Bill: BILL-' + bill.bill_number);
   L.push('Date: ' + formatDate(bill.created_at));
   if (bill.customer_name && bill.customer_name !== 'Walk-in Customer') {
@@ -127,7 +127,6 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   if (bill.discount_amount > 0) {
     L.push(lr('DISCOUNT:', '-' + money(bill.discount_amount)));
   }
-  L.push(dash());
   L.push(lr('GRAND TOTAL:', money(bill.grand_total)));
   L.push(dash());
 
