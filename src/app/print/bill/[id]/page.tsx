@@ -189,7 +189,7 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
         <pre style={{
           fontFamily: 'monospace',
           fontSize: '12px',
-          lineHeight: '1.4',
+          lineHeight: '1.15',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           margin: 0,
