@@ -59,23 +59,24 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
 
   const money = (v: number) => `Rs.${v.toFixed(2)}`;
 
-  // Word-wrap text into centered lines that fit within W chars
-  const wrapCenter = (text: string) => {
-    const words = text.split(' ');
-    const result: string[] = [];
-    let line = '';
-    for (const word of words) {
-      if (line === '') {
-        line = word;
-      } else if (line.length + 1 + word.length <= W) {
-        line += ' ' + word;
-      } else {
-        result.push(center(line));
-        line = word;
-      }
-    }
-    if (line) result.push(center(line));
-    return result;
+  // Balanced word-wrap: splits near the middle to avoid
+  // orphan words like "COLLEGE" or "Kerala" alone on a line
+  const wrapCenter = (text: string): string[] => {
+    if (text.length <= W) return [center(text)];
+    const mid = Math.floor(text.length / 2);
+    const l = text.lastIndexOf(' ', mid);
+    const r = text.indexOf(' ', mid);
+    let at: number;
+    if (l === -1 && r === -1) return [text];
+    else if (l === -1) at = r;
+    else if (r === -1) at = l;
+    else at = (mid - l <= r - mid) ? l : r;
+    const p1 = text.substring(0, at);
+    const p2 = text.substring(at + 1);
+    return [
+      ...(p1.length <= W ? [center(p1)] : wrapCenter(p1)),
+      ...(p2.length <= W ? [center(p2)] : wrapCenter(p2)),
+    ];
   };
 
   const storeName = settings?.restaurant_name || 'GALAXY RESTAURANT KARUNA MEDICAL COLLEGE';
@@ -86,7 +87,7 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
 
   const L: string[] = [];
 
-  // Header — auto-wraps long names
+  // Header — balanced auto-wrap
   L.push(...wrapCenter(storeName));
   L.push(...wrapCenter(tagline));
   L.push(...wrapCenter(addr));
@@ -131,7 +132,6 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   L.push(dash());
 
   // Footer
-  L.push('');
   L.push(center('*** THANK YOU! ***'));
   L.push(center('VISIT AGAIN'));
 
