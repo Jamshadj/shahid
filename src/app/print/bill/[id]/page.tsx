@@ -110,15 +110,19 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
   }
   L.push(dash());
 
-  // Items — 2-line format
-  L.push(lr('ITEM', 'RATE     AMT'));
+  // Items — SL, Item Name, QTY, RATE, AMT
+  L.push('SL  ITEM NAME');
+  L.push(('QTY'.padStart(3) + 'RATE'.padStart(8) + 'AMT'.padStart(9)).padStart(W));
   L.push(dash());
 
+  let sl = 0;
   bill.bill_items?.forEach((item) => {
-    L.push(`${item.quantity} x ${item.item_name}`);
-    const r = item.unit_price.toFixed(2);
-    const a = item.total_price.toFixed(2);
-    L.push((r.padStart(10) + a.padStart(10)).padStart(W));
+    sl++;
+    L.push(`${sl}. ${item.item_name}`);
+    const q = String(item.quantity).padStart(3);
+    const r = item.unit_price.toFixed(2).padStart(8);
+    const a = item.total_price.toFixed(2).padStart(9);
+    L.push((q + r + a).padStart(W));
   });
   L.push(dash());
 
