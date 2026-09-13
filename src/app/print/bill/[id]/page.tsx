@@ -9,9 +9,8 @@ import Link from 'next/link';
 
 // ── Thermal Printer Text Formatting ──
 // TENAX TN260 80mm ignores ALL CSS layout.
-// From physical testing: ~38 chars fit per line at 12px mono.
-// Using 32 for guaranteed safety on all 80mm printers.
-const W = 32;
+// Monospace pre-formatted text with W=34 at 13.5px font fills 80mm paper perfectly without blank right margins.
+const W = 34;
 
 const center = (t: string) => {
   if (t.length >= W) return t;
@@ -112,16 +111,16 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
 
   // Items — SL, Item Name, QTY, RATE, AMT
   L.push('SL  ITEM NAME');
-  L.push(('QTY'.padStart(3) + 'RATE'.padStart(8) + 'AMT'.padStart(9)).padStart(W));
+  L.push(('QTY'.padStart(4) + 'RATE'.padStart(9) + 'AMT'.padStart(10)).padStart(W));
   L.push(dash());
 
   let sl = 0;
   bill.bill_items?.forEach((item) => {
     sl++;
     L.push(`${sl}. ${item.item_name}`);
-    const q = String(item.quantity).padStart(3);
-    const r = item.unit_price.toFixed(2).padStart(8);
-    const a = item.total_price.toFixed(2).padStart(9);
+    const q = String(item.quantity).padStart(4);
+    const r = item.unit_price.toFixed(2).padStart(9);
+    const a = item.total_price.toFixed(2).padStart(10);
     L.push((q + r + a).padStart(W));
   });
   L.push(dash());
@@ -187,9 +186,10 @@ export default function PrintBillPage({ params }: { params: Promise<{ id: string
         style={{ color: '#000', backgroundColor: '#fff' }}
       >
         <pre style={{
-          fontFamily: 'monospace',
-          fontSize: '12px',
-          lineHeight: '1.15',
+          fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+          fontSize: '13.5px',
+          fontWeight: '600',
+          lineHeight: '1.18',
           whiteSpace: 'pre-wrap',
           wordBreak: 'break-word',
           margin: 0,

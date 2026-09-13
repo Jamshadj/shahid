@@ -103,84 +103,44 @@ export default function StandaloneTestPrinterPage() {
           {/* Rendered 80mm Thermal Slip */}
           <div
             id="printable-receipt"
-            className="bg-white text-black p-4 font-mono text-xs leading-snug shadow-xl border border-slate-300 rounded-sm w-[76mm] max-w-[76mm] my-4"
+            className="bg-white text-black shadow-xl rounded-sm w-[80mm] max-w-[80mm] my-4"
             style={{ color: '#000000', backgroundColor: '#ffffff' }}
           >
-            {/* Header */}
-            <div className="text-center space-y-0.5 pb-2 border-b-2 border-black">
-              <h2 className="font-extrabold text-sm uppercase tracking-wider leading-tight">
-                GALAXY RESTAURANT KARUNA MEDICAL COLLEGE
-              </h2>
-              <p className="text-[9px] font-semibold text-gray-800">Fresh Meals, Quick Bites, Biryani & Refreshing Beverages</p>
-              <p className="text-[10px] uppercase font-bold">Vilayodi, Chittur, Palakkad, Kerala</p>
-              <p className="text-[10px] font-bold">Ph: +91 99461 04923</p>
-            </div>
-
-            {/* Cash Bill Title Bar */}
-            <div className="text-center font-black uppercase tracking-wider py-1 border-b-2 border-black text-xs my-1 bg-black text-white">
-              RESTAURANT CASH BILL
-            </div>
-
-            {/* Meta Table */}
-            <table className="w-full text-left my-1 text-[10px] border-b border-black pb-1 font-bold">
-              <tbody>
-                <tr>
-                  <td className="py-0.5">TOKEN NO: #124</td>
-                  <td className="py-0.5 text-right uppercase">MODE: CASH</td>
-                </tr>
-                <tr>
-                  <td className="py-0.5">Bill: BILL-1024</td>
-                  <td className="py-0.5 text-right">{new Date().toLocaleDateString('en-IN')}</td>
-                </tr>
-              </tbody>
-            </table>
-
-            {/* Table */}
-            <table className="w-full text-left my-2 text-[10px] border-b-2 border-black pb-2">
-              <thead>
-                <tr className="border-b border-black font-extrabold">
-                  <th className="py-1 w-[50%]">QTY ITEM</th>
-                  <th className="py-1 w-[25%] text-right pr-1">RATE</th>
-                  <th className="py-1 w-[25%] text-right">AMT</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr className="align-top">
-                  <td className="py-1 pr-1 font-bold w-[50%]">2 x Normal Al-Faham (Quarter)</td>
-                  <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">140.00</td>
-                  <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">280.00</td>
-                </tr>
-                <tr className="align-top">
-                  <td className="py-1 pr-1 font-bold w-[50%]">1 x Normal Mandhi (Quarter)</td>
-                  <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">200.00</td>
-                  <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">200.00</td>
-                </tr>
-                <tr className="align-top">
-                  <td className="py-1 pr-1 font-bold w-[50%]">2 x Fresh Lime Soda</td>
-                  <td className="py-1 text-right whitespace-nowrap w-[25%] pr-1">30.00</td>
-                  <td className="py-1 text-right font-bold whitespace-nowrap w-[25%]">60.00</td>
-                </tr>
-              </tbody>
-            </table>
-
-            {/* Calculation Summary Table */}
-            <table className="w-full text-[10px] border-b-2 border-black pb-2 my-1 font-bold">
-              <tbody>
-                <tr>
-                  <td className="py-0.5">SUBTOTAL:</td>
-                  <td className="py-0.5 text-right">Rs. 540.00</td>
-                </tr>
-                <tr className="text-sm font-black border-t border-black">
-                  <td className="pt-1">GRAND TOTAL:</td>
-                  <td className="pt-1 text-right">Rs. 540.00</td>
-                </tr>
-              </tbody>
-            </table>
-
-            {/* Footer */}
-            <div className="text-center pt-3 text-[10px] space-y-1">
-              <p className="font-bold uppercase tracking-wider">*** THANK YOU! VISIT AGAIN ***</p>
-            </div>
+            <pre style={{
+              fontFamily: 'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+              fontSize: '13.5px',
+              fontWeight: '600',
+              lineHeight: '1.18',
+              whiteSpace: 'pre-wrap',
+              wordBreak: 'break-word',
+              margin: 0,
+              padding: '6px',
+            }}>{`GALAXY RESTAURANT KARUNA MEDICAL
+Fresh Meals, Quick Bites, Biryani &
+            Beverages
+    Vilayodi, Chittur, Palakkad,
+             Kerala
+       Ph: +91 99461 04923
+----------------------------------
+       RESTAURANT CASH BILL       
+----------------------------------
+TOKEN: #124  |  CASH
+Bill: BILL-1024
+Date: 13 Sept 2026, 01:22 pm
+----------------------------------
+SL  ITEM NAME
+           QTY     RATE       AMT
+----------------------------------
+1. BBQ Al-Faham (Half)
+             3   340.00   1020.00
+2. Turkish Al-Faham (Quarter)
+             1   180.00    180.00
+----------------------------------
+SUBTOTAL:               Rs.1200.00
+GRAND TOTAL:            Rs.1200.00
+----------------------------------
+        *** THANK YOU! ***        
+           VISIT AGAIN            `}</pre>
           </div>
         </div>
       </div>
